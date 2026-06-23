@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>GALACTICOS Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0B0E14] text-white p-10">
+    <div id="app">
+        <h1 class="text-2xl font-bold mb-4">ระบบ GALACTICOS</h1>
+        <button id="testBtn" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded">
+            ทดสอบการเชื่อมต่อ
+        </button>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://sbvqhflylmaazgubuspx.supabase.co/';
+        const SUPABASE_KEY = 'sb_publishable_UWqqdz309jU3y96PfeK4cw_xetDFiUb';
+
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            try {
+                const { data, error } = await client.from('members').select('*');
+                if (error) throw error;
+                alert('เชื่อมต่อสำเร็จ! พบข้อมูลสมาชิก: ' + data.length + ' คน');
+            } catch (err) {
+                alert('เชื่อมต่อไม่สำเร็จ: ' + err.message);
+            }
+        });
+    </script>
+</body>
+</html>
