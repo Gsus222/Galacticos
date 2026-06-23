@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>GALACTICOS Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0B0E14] text-white min-h-screen flex items-center justify-center">
+
+    <div id="login-screen" class="bg-[#131A26] p-8 rounded-xl shadow-lg border border-gray-700 w-80">
+        <h2 class="text-xl font-bold mb-6 text-center text-indigo-400">GALACTICOS LOGIN</h2>
+        
+        <select id="username-select" class="w-full p-2 mb-4 bg-gray-800 rounded border border-gray-700 text-white">
+            <option value="">-- เลือกชื่อของคุณ --</option>
+        </select>
+        
+        <input type="password" id="pin" placeholder="PIN 4 หลัก" maxlength="4" class="w-full p-2 mb-4 bg-gray-800 rounded border border-gray-700">
+        
+        <button onclick="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-2 rounded font-bold transition">เข้าสู่ระบบ</button>
+    </div>
+
+    <div id="dashboard-screen" class="hidden p-10 w-full max-w-4xl text-center">
+        <h1 class="text-2xl font-bold mb-4">ระบบ GALACTICOS - <span id="user-role" class="text-indigo-400"></span></h1>
+        <button id="testBtn" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded">ทดสอบการเชื่อมต่อ</button>
+        <button onclick="logout()" class="ml-4 bg-red-600 hover:bg-red-500 px-4 py-2 rounded">Logout</button>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://sbvqhflylmaazgubuspx.supabase.co/'; // ใส่ URL ของคุณ
+        const SUPABASE_KEY = 'sb_publishable_UWqqdz309jU3y96PfeK4cw_xetDFiUb'; // ใส่ KEY ของคุณ
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // 1. โหลดรายชื่อสมาชิก
+        async function loadMemberSelect() {
+            const { data, error } = await client.from('members').select('username');
+            if (error) return console.error("Error:", error);
+            
+            const select = document.getElementById('username-select');
+            data.forEach(m => {
+                let opt = document.createElement('option');
+                opt.value = m.username;
+                opt.textContent = m.username;
+                select.appendChild(opt);
+            });
+        }
+
+        // 2. ฟังก์ชัน Login
+        async function handleLogin() {
+            const username = document.getElementById('username-select').value;
+            const pin = document.getElementById('pin').value;
+
+            if(!username || !pin) return alert("กรุณาเลือกชื่อและใส่ PIN");
+
+            const { data, error } = await client
+                .from('members')
+                .select('*')
+                .eq('username', username)
+                .eq('pin_code', pin)
+                .single();
+
+            if (data) {
+                localStorage.setItem('galacticos_user', JSON.stringify(data));
+                showDashboard(data);
+            } else {
+                alert("ชื่อผู้ใช้หรือ PIN ไม่ถูกต้อง!");
+            }
+        }
+
+        // 3. สลับหน้าจอ
+        function showDashboard(user) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('dashboard-screen').classList.remove('hidden');
+            document.getElementById('user-role').innerText = user.role.toUpperCase();
+        }
+
+        function logout() {
+            localStorage.removeItem('galacticos_user');
+            location.reload();
+        }
+
+        // 4. เริ่มต้นระบบ
+        window.onload = () => {
+            loadMemberSelect();
+            const savedUser = localStorage.getItem('galacticos_user');
+            if (savedUser) showDashboard(JSON.parse(savedUser));
+        };
+
+        // 5. ปุ่มทดสอบ
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            const { data, error } = await client.from('members').select('*');
+            if (error) alert(error.message);
+            else alert('เชื่อมต่อสำเร็จ! พบสมาชิกทั้งหมด: ' + data.length + ' คน');
+        });
+    </script>
+</body>
+</html>
